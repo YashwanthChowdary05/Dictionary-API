@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dictionary API</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+    <body class="bg-light">
+        <div class="container mt-5">
+            <h2 class="text-center">Dictionary API</h2>
+            <div class="d-flex justify-content-center mt-3">
+                <div class="input-group w-50">
+                    <input type="text" id="searchWord" class="form-control" placeholder="Enter a word">
+                    <button class="btn btn-primary" id="searchBtn">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        <div class="mt-4">
+            <table class="table table-bordered bg-white">
+                <thead>
+                    <tr>
+                        <th>Word</th>
+                        <th>Parts of Speech</th>
+                        <th>Definitions</th>
+                        <th>Audio URL</th>
+                        <th>Source URL</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTableBody"></tbody>
+            </table>
+        </div>
+
+        <script>
+            $(document).ready(function(){
+                $("#searchBtn").click(function(){
+                    let word = $("#searchWord").val().trim();
+                    if (word) {
+                        $.getJSON(`/search?word=${word}`, function(data) {
+                            $("#resultTableBody").empty();
+
+                            if (Array.isArray(data) && data.length > 0) {
+                                let totalMeanings = data.reduce((sum, entry) => sum + entry.meanings.length, 0);
+                                let firstRow = true;
+                                
+                                data.forEach(entry => {
+                                    let audioUrl = entry.phonetics.find(p => p.audio)?.audio || "";
+                                    let sourceUrl = `https://en.wiktionary.org/wiki/${entry.word}`;
+                                    let audioElement = audioUrl ? `<audio controls><source src="${audioUrl}" type="audio/mpeg"></audio>` : "N/A";
+                                    
+                                    entry.meanings.forEach((meaning, index) => {
+                                        let definitions = meaning.definitions.map(def => 
+                                            `<li><strong>Definition:</strong> ${def.definition} 
+                                            ${def.example ? `<br><em>Example:</em> ${def.example}` : ""} 
+                                            ${def.synonyms.length ? `<br><strong>Synonyms:</strong> ${def.synonyms.join(", ")}` : ""} 
+                                            ${def.antonyms.length ? `<br><strong>Antonyms:</strong> ${def.antonyms.join(", ")}` : ""} 
+                                            </li>`).join("");
+                                        
+                                        let row = `<tr>`;
+                                        if (firstRow) {
+                                            row += `<td rowspan="${totalMeanings}">${entry.word}</td>`;
+                                        }
+                                        row += `<td>${meaning.partOfSpeech}</td>`;
+                                        row += `<td><ul>${definitions}</ul></td>`;
+                                        row += `<td>${audioElement}</td>`;
+                                        if (firstRow) {
+                                            row += `<td rowspan="${totalMeanings}"><a href="${sourceUrl}" target="_blank">Source</a></td>`;
+                                        }
+                                        row += `</tr>`;
+                                        $("#resultTableBody").append(row);
+                                        firstRow = false;
+                                    });
+                                });
+                            } else {
+                                $("#resultTableBody").append(`<tr><td colspan="5" class="text-center">No results found.</td></tr>`);
+                            }
+                        }).fail(function() {
+                            $("#resultTableBody").html(`<tr><td colspan="5" class="text-center">Word not found.</td></tr>`);
+                        });
+                    } else {
+                        $("#resultTableBody").html(`<tr><td colspan="5" class="text-center">Please enter a word.</td></tr>`);
+                    }
+                });
+            });
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>
