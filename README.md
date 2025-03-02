@@ -1,4 +1,4 @@
-**Project Document: Dictionary API Web Application**
+**Dictionary API Web Application - Documentation**
 
 **1. Project Overview**
 The Dictionary API Web Application is a web-based tool that allows users to search for word definitions, phonetics, and other related information using a publicly available dictionary API. The application provides a user-friendly interface for retrieving word meanings, synonyms, antonyms, and pronunciation audio.
